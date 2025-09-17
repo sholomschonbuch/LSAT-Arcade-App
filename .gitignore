@@ -1,0 +1,17 @@
+# Ignore environment variable files
+.env*
+
+# Ignore Next.js build output
+.next/
+
+# Node modules
+node_modules/
+mobile/node_modules/
+
+# Expo build and cache directories
+mobile/.expo/
+mobile/android/
+mobile/ios/
+
+# Miscellaneous system files
+.DS_Store
