@@ -4,20 +4,10 @@ import { Provider as PaperProvider, Appbar, Card, Title, Paragraph } from 'react
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { generateQuestion, tutorChat } from '../src/lib/openai';
+import { generateQuestion, tutorChat } from './lib/openai';
 
-// Type definitions for chat messages and questions
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-interface Question {
-  question: string;
-  choices: string[];
-  answer: string;
-  explanation: string;
-}
+type Message = { role: 'user' | 'assistant'; content: string };
+type Question = { question: string; choices: string[]; answer: string; explanation: string };
 
 function TutorScreen() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -51,7 +41,7 @@ function TutorScreen() {
         ))}
         {loading && <Paragraph style={{ margin: 8 }}>Thinking…</Paragraph>}
       </ScrollView>
-      <View style={{ flexDirection: 'row', padding: 12 }}>
+      <View style={{ flexDirection: 'row', padding: 12, gap: 8 }}>
         <TextInput
           value={input}
           onChangeText={setInput}
@@ -72,6 +62,9 @@ function DrillScreen() {
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const normalizedAnswer =
+    question?.answer != null ? String(question.answer).trim().toUpperCase() : '';
+
   const fetchNew = async () => {
     setLoading(true);
     const q = await generateQuestion();
@@ -87,7 +80,7 @@ function DrillScreen() {
 
   const submit = () => {
     if (!question || !selected) return;
-    if (selected === question.answer) {
+    if (selected === normalizedAnswer) {
       setXp((x) => x + 10);
       setStreak((s) => s + 1);
     } else {
@@ -115,7 +108,15 @@ function DrillScreen() {
         {question.choices.map((c, i) => {
           const letter = String.fromCharCode(65 + i);
           const isSelected = selected === letter;
-          const correct = showExp && letter === question.answer;
+          const isCorrectChoice = showExp && letter === normalizedAnswer;
+          const isSelectedWrong = showExp && isSelected && letter !== normalizedAnswer;
+          const borderColor = isCorrectChoice
+            ? 'green'
+            : isSelectedWrong
+            ? 'red'
+            : isSelected
+            ? '#0ea5e9'
+            : '#ccc';
           return (
             <Card
               key={letter}
@@ -123,50 +124,35 @@ function DrillScreen() {
               style={{
                 marginVertical: 4,
                 borderWidth: 1,
-                borderColor: isSelected ? (correct ? 'green' : 'red') : '#ccc',
+                borderColor,
               }}
             >
-              <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontWeight: 'bold', marginRight: 4 }}>{letter}.</Text>
+              <Card.Content>
+                <Text style={{ fontWeight: 'bold' }}>{letter}. </Text>
                 <Text>{c}</Text>
               </Card.Content>
             </Card>
           );
         })}
-        {showExp && (
-          <Card style={{ marginTop: 12, backgroundColor: '#FEFCE8', borderLeftWidth: 4, borderLeftColor: 'gold' }}>
+        {showExp ? (
+          <Card
+            style={{
+              marginTop: 12,
+              backgroundColor: '#FEFCE8',
+              borderLeftWidth: 4,
+              borderLeftColor: 'gold',
+            }}
+          >
             <Card.Content>
-              <Text>Explanation: {question.explanation}</Text>
-              <Button title="Next Question" onPress={fetchNew} />
-            </Car.Content>
-        </Card>
-        )}
-        {!showExp && (
-          <Button title="Submit" onPress={submit} disabled={!selected} />
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-const Tab = createBottomTabNavigator();
-
-export default function App() {
-  return (
-    <PaperProvider>
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ color, size }) => {
-              const icons: Record<string, keyof typeof Ionicons.glyphMap> = { Tutor: 'chatbubbles', Drill: 'bulb' };
-              return <Ionicons name={icons[route.name]} color={color} size={size} />;
-            },
-            tabBarActiveTintColor: 'tomato',
-            tabBarInactiveTintColor: 'gray',
-          })}
-        >
-          <Tab.Screen name="Tutor" component={TutorScreen} />
-          <Tab.Screen name="Drill" component={DrillScreen} />
+              <Text style={{ fontWeight: '600', marginBottom: 6 }}>
+                {selected === normalizedAnswer
+                  ? `Correct! +10 XP`
+                  : `Incorrect. Correct answer: ${normalizedAnswer}`}
+              </Text>
+              <Text style={{ marginBottom: 10 }}>
+                Explanation: {question.explanation}
+              </Text>
+       <Tab.Screen name="Drill" component={DrillScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </PaperProvider>
