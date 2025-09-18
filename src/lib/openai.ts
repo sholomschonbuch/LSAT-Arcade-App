@@ -22,42 +22,56 @@ function mockDrill() {
   };
 }
 
-export async function generateQuestion(topic = 'logical_reasoning') {
+type Drill = {
+  question: string;
+  choices: string[];
+  answer: typeof letters[number];
+  explanation: string;
+};
+
+export async function generateQuestion(topic = 'logical_reasoning'): Promise<Drill> {
   if (MOCK || !client) return mockDrill();
 
-  // Minimal, fast prompt — swap for your richer system prompt later
-  const prompt = `Create a single ${topic} multiple-choice LSAT drill. JSON only with keys: question, choices (5), answer (A-E), explanation (1-2 sentences).`;
+  const prompt = `Create a single ${topic} multiple-choice LSAT drill. 
+JSON only with keys: question, choices (5), answer (A-E), explanation (1-2 sentences).`;
 
   try {
-    const res = await client.responses.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      input: prompt,
+    const res = await client.chat.completions.create({
+      model: process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini',
       temperature: 0.3,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     });
 
     const text =
-      (res.output_text || res.output?.[0]?.content?.[0]?.text) ??
-      JSON.stringify(mockDrill());
+      res.choices?.[0]?.message?.content?.trim() || JSON.stringify(mockDrill());
 
-    let data: any = {};
+    let data: any;
     try {
       data = JSON.parse(text);
     } catch {
-      data = mockDrill();
+      // If the model returns prose, fall back to mock.
+      return mockDrill();
     }
 
-    // Normalize
     const ans = String(data.answer ?? '').trim().toUpperCase();
-    const normalized =
+    const normalized: Drill['answer'] =
       /^[A-E]$/.test(ans)
-        ? ans
-        : letters[(parseInt(ans, 10) - 1) || 0] || 'A';
+        ? (ans as Drill['answer'])
+        : (letters[(parseInt(ans, 10) - 1) || 0] ?? 'A');
+
+    const choices: string[] =
+      Array.isArray(data.choices) && data.choices.length >= 5
+        ? data.choices.slice(0, 5).map((c: any) => String(c))
+        : mockDrill().choices;
 
     return {
       question: String(data.question ?? mockDrill().question),
-      choices: Array.isArray(data.choices) && data.choices.length >= 5
-        ? data.choices.slice(0,5).map(String)
-        : mockDrill().choices,
+      choices,
       answer: normalized,
       explanation: String(data.explanation ?? mockDrill().explanation),
     };
