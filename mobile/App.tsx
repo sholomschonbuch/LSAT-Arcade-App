@@ -8,6 +8,10 @@ import { generateQuestion, tutorChat } from './lib/openai';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 type Question = { question: string; choices: string[]; answer: string; explanation: string };
+type RootTabParamList = {
+  Tutor: undefined;
+  Drill: undefined;
+};
 
 function TutorScreen() {
   const [history, setHistory] = useState<Message[]>([]);
@@ -31,9 +35,15 @@ function TutorScreen() {
       <Appbar.Header>
         <Appbar.Content title="Tutor Chat" />
       </Appbar.Header>
-      <ScrollView style={{ flex: 1, padding: 12 }}>
+      <ScrollView style={{ flex: 1, padding: 12 }} contentContainerStyle={{ paddingBottom: 16 }}>
         {history.map((msg, i) => (
-          <Card key={i} style={{ marginVertical: 4, backgroundColor: msg.role === 'user' ? '#E0F2FE' : '#F0FFF4' }}>
+          <Card
+            key={i}
+            style={{
+              marginVertical: 4,
+              backgroundColor: msg.role === 'user' ? '#E0F2FE' : '#F0FFF4',
+            }}
+          >
             <Card.Content>
               <Paragraph>{msg.content}</Paragraph>
             </Card.Content>
@@ -103,7 +113,7 @@ function DrillScreen() {
         <Appbar.Content title="Drill Game" />
         <Text style={{ color: '#fff', marginRight: 12 }}>XP: {xp} | Streak: {streak}</Text>
       </Appbar.Header>
-      <ScrollView style={{ flex: 1, padding: 12 }}>
+      <ScrollView style={{ flex: 1, padding: 12 }} contentContainerStyle={{ paddingBottom: 24 }}>
         <Title>{question.question}</Title>
         {question.choices.map((c, i) => {
           const letter = String.fromCharCode(65 + i);
@@ -127,8 +137,8 @@ function DrillScreen() {
                 borderColor,
               }}
             >
-              <Card.Content>
-                <Text style={{ fontWeight: 'bold' }}>{letter}. </Text>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontWeight: 'bold', marginRight: 4 }}>{letter}.</Text>
                 <Text>{c}</Text>
               </Card.Content>
             </Card>
@@ -146,13 +156,51 @@ function DrillScreen() {
             <Card.Content>
               <Text style={{ fontWeight: '600', marginBottom: 6 }}>
                 {selected === normalizedAnswer
-                  ? `Correct! +10 XP`
+                  ? 'Correct! +10 XP'
                   : `Incorrect. Correct answer: ${normalizedAnswer}`}
               </Text>
-              <Text style={{ marginBottom: 10 }}>
-                Explanation: {question.explanation}
-              </Text>
-       <Tab.Screen name="Drill" component={DrillScreen} />
+              <Text style={{ marginBottom: 10 }}>Explanation: {question.explanation}</Text>
+              <Button title="Next Question" onPress={fetchNew} />
+            </Card.Content>
+          </Card>
+        ) : (
+          <View style={{ marginTop: 12 }}>
+            <Button title="Submit" onPress={submit} disabled={!selected} />
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const Tab = createBottomTabNavigator<RootTabParamList>();
+
+export default function App() {
+  return (
+    <PaperProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          id={undefined}
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ color, size }) => {
+              const icons: Record<keyof RootTabParamList, React.ComponentProps<typeof Ionicons>['name']> = {
+                Tutor: 'chatbubbles',
+                Drill: 'bulb',
+              };
+              return (
+                <Ionicons
+                  name={icons[route.name as keyof RootTabParamList]}
+                  color={color}
+                  size={size}
+                />
+              );
+            },
+            tabBarActiveTintColor: 'tomato',
+            tabBarInactiveTintColor: 'gray',
+          })}
+        >
+          <Tab.Screen name="Tutor" component={TutorScreen} />
+          <Tab.Screen name="Drill" component={DrillScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </PaperProvider>
