@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, ViewStyle, TextStyle } from "react-native";
 import { colors, radius, shadow } from "../../theme";
 import { useEffect, useState } from "react";
 import { loadProfile, Profile } from "../../utils/storage";
@@ -49,5 +49,14 @@ function Row({ label, value }:{label:string; value:string}) {
     </View>
   );
 }
-const pill = (bg:string)=>({ backgroundColor: bg, paddingVertical:10, paddingHorizontal:12, borderRadius: 9999 });
-const pillText = ()=>({ color:"#fff", fontWeight:"800" });
+const pill = (bg:string): ViewStyle => ({
+  backgroundColor: bg,
+  paddingVertical:10,
+  paddingHorizontal:12,
+  borderRadius: 9999,
+});
+
+const pillText = (): TextStyle => ({
+  color:"#fff",
+  fontWeight:"800",
+});
