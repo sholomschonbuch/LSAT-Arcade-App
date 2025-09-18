@@ -1,0 +1,54 @@
+# --- OS cruft ---
+.DS_Store
+Thumbs.db
+
+# --- Editors / IDEs ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Node / package managers ---
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# --- Env & secrets (DO NOT COMMIT KEYS) ---
+.env
+.env.*
+!.env.example
+# Keep .env.example if you have one
+.npmrc
+
+# --- Next.js (web) ---
+.next/
+out/
+# If you export static site, the output dir may be "out/"
+
+# --- Tailwind / tooling caches (safe to ignore if created) ---
+.tailwind*
+.postcss-cache/
+
+# --- Coverage / reports ---
+coverage/
+reports/
+
+# --- Expo / React Native (mobile/) ---
+.expo/
+.expo-shared/
+web-build/
+dist/
+build/
+android/
+ios/
+# If you eject/prebuild and want to commit native projects, remove the two lines above.
+
+# --- Platform caches ---
+*.swp
+*.swo
+
+# --- Misc ---
+*.log
